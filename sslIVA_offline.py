@@ -8,12 +8,8 @@ Created on Thu Feb 10 16:25:10 2022
 
 
 import numpy as np
-import wave
 import soundfile as sf
 from scipy import signal
-import sys
-from scipy import signal
-import pyaudio
 import time
 #from test03 import IVA_afterSTFT
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
@@ -145,5 +141,3 @@ for i in range(nsources):
 
 sf.write('after/'+fileway+'.wav', St_hat.T,samplerate= sr)
 
-
-## 创建相应的txt文件来记录运行情况
