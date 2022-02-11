@@ -6,7 +6,7 @@ import numpy as np
 import soundfile as sf
 from scipy import signal
 
-eta = 0.1#learning rate
+eta = 2#learning rate
 beta = 0.5
 
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
