@@ -1,106 +1,103 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb 10 16:25:10 2022
-
-@author: AR
+用于SSLIVA的在线算法，仅仅考虑输入源数量等于源型号数量的情况
 """
 import numpy as np
 import soundfile as sf
 from scipy import signal
-import time
+
+eta = 0.1#learning rate
+beta = 0.5
 
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
 fileway = 'E2A'
-
-
-##############################################
 file1 = 'mixed/'+fileway+'_L.wav'
 file2 = 'mixed/'+fileway+'_R.wav'
 
 tmp ,sr = sf.read(file1)
 Sig_ori = np.zeros([nsources,len(tmp)])# 此处需要设定参数
-
 tmp ,_= sf.read(file1)
 Sig_ori[:,:] = tmp.T
 tmp ,_= sf.read(file2)
 Sig_ori[:,:] = tmp.T +Sig_ori[:,:]
-
+del tmp
 ##stft
 _,_,Zxx0 = signal.stft(Sig_ori[0,:] , nperseg=2048 , noverlap=1536)
 a,b = np.shape(Zxx0)
-
 Sw = np.zeros((nsources,b,a) , dtype=complex)
 for i in range(nsources):
     _,_,Zxx = signal.stft(Sig_ori[i,:] , nperseg=2048 , noverlap=1536)
     Sw[i,:,:] = Zxx.T 
+del a,b,Zxx,Zxx0
 
 #### analysis
-X = Sw
+[nmic,nframes,nfreq] = np.shape(Sw)    
+X = Sw.swapaxes(0, 1)
+xi = np.zeros(nfreq)
 
-[nmic,N,nfreq] = np.shape(X)
-
-#X represents the signal after stft
-
-eta = 0.1#learning rate
-maxiter = 1000# number of iterations
 tol = 1e-6 #When the difference of objective is less than tol, the algorithm terminates
 nsou = nmic #number of sources
-
 epsi=1e-6
-pObj=float('inf')
+S_out = np.zeros(np.shape(Sw),dtype = complex)
 
-W = np.zeros((nsou,nsou,nfreq),dtype = complex)
-Wp = np.zeros((nsou,nsou,nfreq),dtype = complex)
-dWp = np.zeros(np.shape(Wp),dtype = complex)
-Q = np.zeros((nsou,nmic,nfreq),dtype = complex)
-Xp = np.zeros((nsou,N,nfreq),dtype = complex)
 
-S = np.zeros((nsou,N,nfreq),dtype = complex)
-Ssq = np.zeros((nsou,N),dtype = complex)
-Ssq1 = np.zeros((nsou,N),dtype = complex)
 
-# PCA
-# PCA
-for p in range(nfreq):
-    Xmean = np.mean(X[:,:,p],1)
-    Xmean = Xmean.reshape(len(Xmean),1)
-    Xmean = Xmean @ np.ones((1,N))
 
-    Rxx = (X[:,:,p]- Xmean) @ (X[:,:,p]- Xmean).T.conjugate() /N
+#W = np.zeros((nsou,nsou,nfreq),dtype = complex)
+#W = np.eye(nsou,dtype=complex)
+W = np.expand_dims(np.eye(nsou,dtype=complex) , 0).repeat(nfreq,axis = 0)
+dW = np.zeros((nfreq,nsou,nsou),dtype = complex)
+# dWp = np.zeros(np.shape(Wp),dtype = complex)
+# Q = np.zeros((nsou,nmic,nfreq),dtype = complex)
+# Xp = np.zeros((nsou,nframes,nfreq),dtype = complex)
 
-    D,E = np.linalg.eig(Rxx)
+# S = np.zeros((nsou,nframes,nfreq),dtype = complex)
+# Ssq = np.zeros((nsou,nframes),dtype = complex)
+# Ssq1 = np.zeros((nsou,nframes),dtype = complex)
+
+
+# online independent vector ayalysis
+xn = np.zeros((nmic,nfreq),dtype=complex)
+yn = np.zeros((nmic,nfreq),dtype=complex)
+y_out = np.zeros((nmic,nfreq),dtype=complex)
+for frame in range(nframes):
+   
+    xn = X[frame,:,:]#signal of n_frame
     
-
-    d = np.real(D)
-    tmp = np.sort(-d)
-    order = np.argsort(-d)
-
-    E = E[:,order[:nsou]]
-
-    d = d[order[:nsou]]
-    d = np.real(d)
-    d = np.power(d , -0.5)
-    D2 = np.diag(d)
-    Q[:,:,p] = D2@E.T.conjugate()#
-
-    Xp[:,:,p] = Q[:,:,p]@(X[:,:,p]-Xmean)
-    Wp[:,:,p] = np.eye(nsou)
-
-# independent vector ayalysis
-
-for iter in range(maxiter):
-
-    dlw = 0
     for k in range(nfreq):
-        S[:,:,k] = Wp[:,:,k] @ Xp[:,:,k]
+        yn[:,k] = W[k,:,:] @ xn[:,k]
+        y_out = np.diag(np.diag(np.linalg.inv(W[k,:,:])))@yn[:,k]
+        S_out[:,frame,k ] = y_out
+#xi  
+#    x2 = np.sum(np.abs(xn)**2,axis = 0)/nmic
+#    xi = beta*xi + (1-beta)*x2
+    xi = beta*xi + (1-beta) * np.sum(np.abs(xn)**2,axis = 0)/nmic
+#Phi
+    S = np.sqrt(np.sum(np.abs(yn)**2 , axis = 1))**-1
+    for k in range(nfreq):
+        Phi = np.expand_dims(yn[:,k] *S,axis = 1)
+        Rk = Phi @ np.expand_dims(yn[:,k] .conjugate() ,axis = 0)
+        Lambda = np.diag(np.diag(Rk))
+        dW[k , : , :] = (Lambda - Rk ) @ W[k,:,:]
+        W[k,:,:] = W[k,:,:] + eta*xi[k]**(-0.5) * dW[k , : , :] 
+        
+        
+ 
 
+
+
+
+
+
+    #dWp[:,:,k] = (np.eye(nsou) - Phi @ S[:,:,k].T.conjugate()/N ) @ Wp[:,:,k]        
+'''
     Ssq = np.sum(np.power(np.abs(S),2),2)
     Ssq = np.sqrt(Ssq)
     Ssq1 = np.power(Ssq + epsi , -1)
 
     for k in range(nfreq):
         Phi = Ssq1 * S[:,:,k]
-        dWp[:,:,k] = (np.eye(nsou) - Phi @ S[:,:,k].T.conjugate()/N ) @ Wp[:,:,k]
+        dWp[:,:,k] = (np.eye(nsou) - Phi @ S[:,:,k].T.conjugate()/nframes ) @ Wp[:,:,k]
         dlw = dlw + np.log(epsi + np.abs(np.linalg.det(Wp[:,:,k])) )
 
     # update
@@ -116,14 +113,14 @@ for k in range(nfreq):
 
 Sw_hat = S
 
-
+'''
 ## istft
 
 
-_ , tmp = signal.istft(Sw_hat[0,:,:].T, nperseg=2048 , noverlap=1536)
+_ , tmp = signal.istft(S_out[0,:,:].T, nperseg=2048 , noverlap=1536)
 St_hat = np.zeros((nsources , len(tmp)))
 for i in range(nsources):
-    _ , tmp = signal.istft(Sw_hat[i,:,:].T, nperseg=2048 , noverlap=1536)
+    _ , tmp = signal.istft(S_out[i,:,:].T, nperseg=2048 , noverlap=1536)
     St_hat[i,:] = np.real(tmp)
 
 
