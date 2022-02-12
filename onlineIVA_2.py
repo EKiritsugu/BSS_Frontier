@@ -2,13 +2,13 @@
 """
 Created on Sat Feb 12 11:12:05 2022
 @author: AR
-with switch prior
+with adaptive learning rate
 """
 import numpy as np
 import soundfile as sf
 from scipy import signal
 
-eta0 = 2#learning rate
+eta0 = 0.02#learning rate
 beta = 0.5
 lamb = 0.99
 
@@ -40,6 +40,7 @@ xi = np.zeros(nfreq)
 gk = np.zeros(nfreq)
 gk_1 = np.zeros(nfreq)
 eta = np.zeros(nfreq)
+eta_1 = np.zeros(nfreq)
 gk0 = np.zeros(nfreq)
 
 tol = 1e-6 #When the difference of objective is less than tol, the algorithm terminates
@@ -77,11 +78,14 @@ for frame in range(nframes):
             gk0[k] = gk[k]
             eta[k] = eta0
             gk_1[k] = gk[k]
+            eta_1[k] = eta[k]
         else:
-            eta[k] = eta0*(gk[k]/gk0[k])*((1-lamb)*gk[k] + lamb *gk_1[k])
+            eta[k] = eta0*(gk[k]/gk0[k])
+            eta[k] = ((1-lamb)*eta[k] + lamb *eta_1[k])
+            eta_1[k] = eta[k]
             gk_1[k] = gk[k] 
-        W[k,:,:] = W[k,:,:] + eta*xi[k]**(-0.5) * dW[k , : , :] 
-        
+        W[k,:,:] = W[k,:,:] + eta[k]*xi[k]**(-0.5) * dW[k , : , :] 
+    print(np.sum(eta))
         
 ## istft
 _ , tmp = signal.istft(S_out[0,:,:].T, nperseg=2048 , noverlap=1536)
@@ -90,7 +94,7 @@ for i in range(nsources):
     _ , tmp = signal.istft(S_out[i,:,:].T, nperseg=2048 , noverlap=1536)
     St_hat[i,:] = np.real(tmp)
 
-sf.write('after/'+fileway+'.wav', St_hat.T,samplerate= sr)
+sf.write('after/'+fileway+'_2.wav', St_hat.T,samplerate= sr)
 
 
 
