@@ -25,8 +25,6 @@ mic_locs = np.c_[
     [3.0 - 0.03,1,1.5]
 ]
 
-
-
 room.add_microphone_array(mic_locs)
 
 
