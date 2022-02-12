@@ -13,8 +13,12 @@ changes made bu spyder
 fs = 16000
 =======
 
+<<<<<<< HEAD
 >>>>>>> parent of 997cd1e (spyder)
 eta = 2#learning rate
+=======
+eta = 0.1#learning rate
+>>>>>>> parent of aabc841 (succeed)
 beta = 0.5
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
 fileway = 'E2A'
