@@ -5,10 +5,11 @@
 import numpy as np
 import soundfile as sf
 from scipy import signal
+import librosa
 '''
 changes made bu spyder
 '''
-
+fs = 16000
 eta = 2#learning rate
 beta = 0.5
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
@@ -16,11 +17,13 @@ fileway = 'E2A'
 file1 = 'mixed/'+fileway+'_L.wav'
 file2 = 'mixed/'+fileway+'_R.wav'
 
-tmp ,sr = sf.read(file1)
+tmp ,sr = librosa.load(file1,sr = 16000)
+#tmp = librosa.resample(tmp , sr , fs)
 Sig_ori = np.zeros([nsources,len(tmp)])# 此处需要设定参数
-tmp ,_= sf.read(file1)
+#tmp ,_= sf.read(file1)
 Sig_ori[:,:] = tmp.T
-tmp ,_= sf.read(file2)
+#tmp ,sr = librosa.load(file2,sr = 16000)
+tmp = librosa.resample(tmp , sr , fs)
 Sig_ori[:,:] = tmp.T +Sig_ori[:,:]
 del tmp
 ##stft
@@ -76,7 +79,7 @@ for i in range(nsources):
     _ , tmp = signal.istft(S_out[i,:,:].T, nperseg=2048 , noverlap=1536)
     St_hat[i,:] = np.real(tmp)
 
-sf.write('after/'+fileway+'.wav', St_hat.T,samplerate= sr)
+sf.write('after/'+fileway+'.wav', St_hat.T,samplerate= fs)
 
 
 

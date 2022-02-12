@@ -88,7 +88,7 @@ for frame in range(nframes):
                 eta[k] = 1
             eta_1[k] = eta[k]
             gk_1[k] = gk[k] 
-        W[k,:,:] = W[k,:,:] + eta[k] * xi[k]**(-0.5) * dW[k,:,:] 
+        W[k,:,:] = W[k,:,:] + eta0 * (xi[k]**(-0.5)) * dW[k,:,:] 
     print(np.sum(eta))
         
 ## istft
