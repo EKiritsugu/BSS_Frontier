@@ -8,7 +8,6 @@ from scipy import signal
 
 eta = 2#learning rate
 beta = 0.5
-
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
 fileway = 'E2A'
 file1 = 'mixed/'+fileway+'_L.wav'
