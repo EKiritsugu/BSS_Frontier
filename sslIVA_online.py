@@ -5,11 +5,15 @@
 import numpy as np
 import soundfile as sf
 from scipy import signal
+<<<<<<< HEAD
 import librosa
 '''
 changes made bu spyder
 '''
 fs = 16000
+=======
+
+>>>>>>> parent of 997cd1e (spyder)
 eta = 2#learning rate
 beta = 0.5
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
