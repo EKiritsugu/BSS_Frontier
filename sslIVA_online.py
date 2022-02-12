@@ -5,21 +5,11 @@
 import numpy as np
 import soundfile as sf
 from scipy import signal
-<<<<<<< HEAD
 import librosa
-'''
-changes made bu spyder
-'''
-fs = 16000
-=======
 
-<<<<<<< HEAD
->>>>>>> parent of 997cd1e (spyder)
 eta = 2#learning rate
-=======
-eta = 0.1#learning rate
->>>>>>> parent of aabc841 (succeed)
 beta = 0.5
+fs = 8000
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
 fileway = 'E2A'
 file1 = 'mixed/'+fileway+'_L.wav'
@@ -28,10 +18,11 @@ file2 = 'mixed/'+fileway+'_R.wav'
 tmp ,sr = librosa.load(file1,sr = 16000)
 #tmp = librosa.resample(tmp , sr , fs)
 Sig_ori = np.zeros([nsources,len(tmp)])# 此处需要设定参数
-#tmp ,_= sf.read(file1)
+tmp ,sr = librosa.load(file1,sr = 16000)
+#tmp = librosa.resample(tmp , sr , fs)
 Sig_ori[:,:] = tmp.T
-#tmp ,sr = librosa.load(file2,sr = 16000)
-tmp = librosa.resample(tmp , sr , fs)
+tmp ,sr = librosa.load(file2,sr = 16000)
+#tmp = librosa.resample(tmp , sr , fs)
 Sig_ori[:,:] = tmp.T +Sig_ori[:,:]
 del tmp
 ##stft
@@ -48,7 +39,6 @@ del a,b,Zxx,Zxx0
 X = Sw.swapaxes(0, 1)
 xi = np.zeros(nfreq)
 
-tol = 1e-6 #When the difference of objective is less than tol, the algorithm terminates
 nsou = nmic #number of sources
 epsi=1e-6
 S_out = np.zeros(np.shape(Sw),dtype = complex)
@@ -61,7 +51,6 @@ xn = np.zeros((nmic,nfreq),dtype=complex)
 yn = np.zeros((nmic,nfreq),dtype=complex)
 y_out = np.zeros((nmic,nfreq),dtype=complex)
 for frame in range(nframes):
-   
     xn = X[frame,:,:]#signal of n_frame
     
     for k in range(nfreq):
@@ -87,8 +76,5 @@ for i in range(nsources):
     _ , tmp = signal.istft(S_out[i,:,:].T, nperseg=2048 , noverlap=1536)
     St_hat[i,:] = np.real(tmp)
 
-sf.write('after/'+fileway+'.wav', St_hat.T,samplerate= fs)
-
-
-
+sf.write('after/'+fileway+'2.wav', St_hat.T,samplerate= fs)
 
