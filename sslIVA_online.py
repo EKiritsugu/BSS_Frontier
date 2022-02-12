@@ -89,8 +89,7 @@ for frame in range(nframes):
 
 
 
-    #dWp[:,:,k] = (np.eye(nsou) - Phi @ S[:,:,k].T.conjugate()/N ) @ Wp[:,:,k]        
-'''
+    '''
     Ssq = np.sum(np.power(np.abs(S),2),2)
     Ssq = np.sqrt(Ssq)
     Ssq1 = np.power(Ssq + epsi , -1)
