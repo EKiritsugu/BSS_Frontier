@@ -40,21 +40,8 @@ nsou = nmic #number of sources
 epsi=1e-6
 S_out = np.zeros(np.shape(Sw),dtype = complex)
 
-
-
-
-#W = np.zeros((nsou,nsou,nfreq),dtype = complex)
-#W = np.eye(nsou,dtype=complex)
 W = np.expand_dims(np.eye(nsou,dtype=complex) , 0).repeat(nfreq,axis = 0)
 dW = np.zeros((nfreq,nsou,nsou),dtype = complex)
-# dWp = np.zeros(np.shape(Wp),dtype = complex)
-# Q = np.zeros((nsou,nmic,nfreq),dtype = complex)
-# Xp = np.zeros((nsou,nframes,nfreq),dtype = complex)
-
-# S = np.zeros((nsou,nframes,nfreq),dtype = complex)
-# Ssq = np.zeros((nsou,nframes),dtype = complex)
-# Ssq1 = np.zeros((nsou,nframes),dtype = complex)
-
 
 # online independent vector ayalysis
 xn = np.zeros((nmic,nfreq),dtype=complex)
@@ -69,8 +56,6 @@ for frame in range(nframes):
         y_out = np.diag(np.diag(np.linalg.inv(W[k,:,:])))@yn[:,k]
         S_out[:,frame,k ] = y_out
 #xi  
-#    x2 = np.sum(np.abs(xn)**2,axis = 0)/nmic
-#    xi = beta*xi + (1-beta)*x2
     xi = beta*xi + (1-beta) * np.sum(np.abs(xn)**2,axis = 0)/nmic
 #Phi
     S = np.sqrt(np.sum(np.abs(yn)**2 , axis = 1))**-1
@@ -82,46 +67,12 @@ for frame in range(nframes):
         W[k,:,:] = W[k,:,:] + eta*xi[k]**(-0.5) * dW[k , : , :] 
         
         
- 
-
-
-
-
-
-
-    '''
-    Ssq = np.sum(np.power(np.abs(S),2),2)
-    Ssq = np.sqrt(Ssq)
-    Ssq1 = np.power(Ssq + epsi , -1)
-
-    for k in range(nfreq):
-        Phi = Ssq1 * S[:,:,k]
-        dWp[:,:,k] = (np.eye(nsou) - Phi @ S[:,:,k].T.conjugate()/nframes ) @ Wp[:,:,k]
-        dlw = dlw + np.log(epsi + np.abs(np.linalg.det(Wp[:,:,k])) )
-
-    # update
-    Wp = Wp + eta * dWp
-
-for k in range(nfreq):
-    W[:,:,k] = Wp[:,:,k] @ Q[:,:,k]
-    W[:,:,k] = np.diag(np.diag(np.linalg.pinv(W[:,:,k]))) @ W[:,:,k]
-
-for k in range(nfreq):
-    S[:,:,k] = W[:,:,k]@X[:,:,k]
-
-
-Sw_hat = S
-
-'''
 ## istft
-
-
 _ , tmp = signal.istft(S_out[0,:,:].T, nperseg=2048 , noverlap=1536)
 St_hat = np.zeros((nsources , len(tmp)))
 for i in range(nsources):
     _ , tmp = signal.istft(S_out[i,:,:].T, nperseg=2048 , noverlap=1536)
     St_hat[i,:] = np.real(tmp)
-
 
 sf.write('after/'+fileway+'.wav', St_hat.T,samplerate= sr)
 
