@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-用于SSLIVA的在线算法，仅仅考虑输入源数量等于源型号数量的情况
+Created on Sat Feb 12 11:12:05 2022
+
+@author: AR
+"""
+
+
+# -*- coding: utf-8 -*-
+"""
+with switch prior
 """
 import numpy as np
 import soundfile as sf
 from scipy import signal
-'''
-changes made bu spyder
-'''
 
 eta = 2#learning rate
 beta = 0.5
