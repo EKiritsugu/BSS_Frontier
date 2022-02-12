@@ -1,28 +1,40 @@
 # -*- coding: utf-8 -*-
 """
 用于SSLIVA的在线算法，仅仅考虑输入源数量等于源型号数量的情况
+以及用于参数的估计
 """
 import numpy as np
 import soundfile as sf
 from scipy import signal
 import librosa
 
+
+
 eta = 2#learning rate
 beta = 0.5
-fs = 8000
+
+
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
 fileway = 'E2A'
 file1 = 'mixed/'+fileway+'_L.wav'
 file2 = 'mixed/'+fileway+'_R.wav'
 
-tmp ,sr = librosa.load(file1,sr = 16000)
-#tmp = librosa.resample(tmp , sr , fs)
+# tmp ,sr = librosa.load(file1,sr = 16000)
+# #tmp = librosa.resample(tmp , sr , fs)
+# Sig_ori = np.zeros([nsources,len(tmp)])# 此处需要设定参数
+# tmp ,sr = librosa.load(file1,sr = 16000)
+# #tmp = librosa.resample(tmp , sr , fs)
+# Sig_ori[:,:] = tmp.T
+# tmp ,sr = librosa.load(file2,sr = 16000)
+# #tmp = librosa.resample(tmp , sr , fs)
+# Sig_ori[:,:] = tmp.T +Sig_ori[:,:]
+# del tmp
+
+tmp ,sr = sf.read(file1)
 Sig_ori = np.zeros([nsources,len(tmp)])# 此处需要设定参数
-tmp ,sr = librosa.load(file1,sr = 16000)
-#tmp = librosa.resample(tmp , sr , fs)
+tmp ,_= sf.read(file1)
 Sig_ori[:,:] = tmp.T
-tmp ,sr = librosa.load(file2,sr = 16000)
-#tmp = librosa.resample(tmp , sr , fs)
+tmp ,_= sf.read(file2)
 Sig_ori[:,:] = tmp.T +Sig_ori[:,:]
 del tmp
 ##stft
@@ -42,7 +54,7 @@ xi = np.zeros(nfreq)
 nsou = nmic #number of sources
 epsi=1e-6
 S_out = np.zeros(np.shape(Sw),dtype = complex)
-
+gn = np.zeros((nfreq,nframes))
 W = np.expand_dims(np.eye(nsou,dtype=complex) , 0).repeat(nfreq,axis = 0)
 dW = np.zeros((nfreq,nsou,nsou),dtype = complex)
 
@@ -66,6 +78,7 @@ for frame in range(nframes):
         Rk = Phi @ np.expand_dims(yn[:,k] .conjugate() ,axis = 0)
         Lambda = np.diag(np.diag(Rk))
         dW[k , : , :] = (Lambda - Rk ) @ W[k,:,:]
+        gn[k,frame] = np.linalg.norm(Lambda - Rk)
         W[k,:,:] = W[k,:,:] + eta*xi[k]**(-0.5) * dW[k , : , :] 
         
         
@@ -76,5 +89,5 @@ for i in range(nsources):
     _ , tmp = signal.istft(S_out[i,:,:].T, nperseg=2048 , noverlap=1536)
     St_hat[i,:] = np.real(tmp)
 
-sf.write('after/'+fileway+'2.wav', St_hat.T,samplerate= fs)
+sf.write('after/'+fileway+'2.wav', St_hat.T,samplerate= sr)
 

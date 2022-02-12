@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 用于SSLIVA的在线算法，仅仅考虑输入源数量等于源型号数量的情况
+succeed 
+别动
 """
 import numpy as np
 import soundfile as sf
@@ -72,5 +74,5 @@ for i in range(nsources):
     _ , tmp = signal.istft(S_out[i,:,:].T, nperseg=2048 , noverlap=1536)
     St_hat[i,:] = np.real(tmp)
 
-sf.write('after/'+fileway+'3.wav', St_hat.T,samplerate= sr)
+sf.write('after/'+fileway+'_ref.wav', St_hat.T,samplerate= sr)
 

@@ -3,14 +3,15 @@
 Created on Sat Feb 12 11:12:05 2022
 @author: AR
 with adaptive learning rate
+partly succeed
 """
 import numpy as np
 import soundfile as sf
 from scipy import signal
 
-eta0 = 0.02#learning rate
+eta0 = 20#learning rate
 beta = 0.5
-lamb = 0.99
+lamb = 0.999
 
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
 fileway = 'E2A'
@@ -41,7 +42,7 @@ gk = np.zeros(nfreq)
 gk_1 = np.zeros(nfreq)
 eta = np.zeros(nfreq)
 eta_1 = np.zeros(nfreq)
-gk0 = np.zeros(nfreq)
+gk0 = np.ones(nfreq)*2e-5
 
 tol = 1e-6 #When the difference of objective is less than tol, the algorithm terminates
 nsou = nmic #number of sources
@@ -73,22 +74,26 @@ for frame in range(nframes):
         Lambda = np.diag(np.diag(Rk))
         dW[k , : , :] = (Lambda - Rk ) @ W[k,:,:]
         # gk[k] eta[k]
-        gk[k] = np.sqrt(np.sum(np.abs(Lambda - Rk)**2))
+        gk[k] = np.linalg.norm(Lambda - Rk)
+        '''
         if frame == 0:
-            gk0[k] = gk[k]
+            #gk0[k] = gk[k]
             eta[k] = eta0
             gk_1[k] = gk[k]
             eta_1[k] = eta[k]
         else:
-            eta[k] = eta0*(gk[k]/gk0[k])
-            eta[k] = ((1-lamb)*eta[k] + lamb *eta_1[k])
-            if eta[k]>100:
-                eta[k] = 100
-            if eta[k]<1:
-                eta[k] = 1
-            eta_1[k] = eta[k]
-            gk_1[k] = gk[k] 
-        W[k,:,:] = W[k,:,:] + eta0 * (xi[k]**(-0.5)) * dW[k,:,:] 
+            '''
+        eta[k] = eta0*(gk[k]/gk0[k])
+        eta[k] = ((1-lamb)*eta[k] + lamb *eta_1[k])
+        '''
+        if eta[k]>100:
+            eta[k] = 100
+        if eta[k]<1:
+            eta[k] = 1
+            '''
+        eta_1[k] = eta[k]
+        gk_1[k] = gk[k] 
+        W[k,:,:] = W[k,:,:] + eta[k] * (xi[k]**(-0.5)) * dW[k,:,:] 
     print(np.sum(eta))
         
 ## istft
