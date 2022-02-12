@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Feb 12 11:12:05 2022
-
 @author: AR
-"""
-
-
-# -*- coding: utf-8 -*-
-"""
 with switch prior
 """
 import numpy as np
 import soundfile as sf
 from scipy import signal
 
-eta = 2#learning rate
+eta0 = 2#learning rate
 beta = 0.5
+lamb = 0.99
+
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
 fileway = 'E2A'
 file1 = 'mixed/'+fileway+'_L.wav'
@@ -41,6 +37,10 @@ del a,b,Zxx,Zxx0
 [nmic,nframes,nfreq] = np.shape(Sw)    
 X = Sw.swapaxes(0, 1)
 xi = np.zeros(nfreq)
+gk = np.zeros(nfreq)
+gk_1 = np.zeros(nfreq)
+eta = np.zeros(nfreq)
+gk0 = np.zeros(nfreq)
 
 tol = 1e-6 #When the difference of objective is less than tol, the algorithm terminates
 nsou = nmic #number of sources
@@ -71,6 +71,15 @@ for frame in range(nframes):
         Rk = Phi @ np.expand_dims(yn[:,k] .conjugate() ,axis = 0)
         Lambda = np.diag(np.diag(Rk))
         dW[k , : , :] = (Lambda - Rk ) @ W[k,:,:]
+        # gk[k] eta[k]
+        gk[k] = np.sqrt(np.sum(np.abs(Lambda - Rk)**2))
+        if frame == 0:
+            gk0[k] = gk[k]
+            eta[k] = eta0
+            gk_1[k] = gk[k]
+        else:
+            eta[k] = eta0*(gk[k]/gk0[k])*((1-lamb)*gk[k] + lamb *gk_1[k])
+            gk_1[k] = gk[k] 
         W[k,:,:] = W[k,:,:] + eta*xi[k]**(-0.5) * dW[k , : , :] 
         
         
