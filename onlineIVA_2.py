@@ -82,9 +82,13 @@ for frame in range(nframes):
         else:
             eta[k] = eta0*(gk[k]/gk0[k])
             eta[k] = ((1-lamb)*eta[k] + lamb *eta_1[k])
+            if eta[k]>100:
+                eta[k] = 100
+            if eta[k]<1:
+                eta[k] = 1
             eta_1[k] = eta[k]
             gk_1[k] = gk[k] 
-        W[k,:,:] = W[k,:,:] + eta[k]*xi[k]**(-0.5) * dW[k , : , :] 
+        W[k,:,:] = W[k,:,:] + eta[k] * xi[k]**(-0.5) * dW[k,:,:] 
     print(np.sum(eta))
         
 ## istft
