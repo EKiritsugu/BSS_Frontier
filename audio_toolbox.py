@@ -14,7 +14,7 @@ def load_resampled_audio(fileway , fs):
     '''
     This function accepts path-like object and samplying frequency. The returned value is an array of dowmsampled waveform.
     '''
-    tmp ,sr = sf.read(file1)
+    tmp ,sr = sf.read(fileway)
     _,nch = np.shape(tmp)
     for i in range(nch):
         tmp2 = librosa.resample(tmp[:,i] , sr ,fs)

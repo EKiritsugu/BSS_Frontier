@@ -2,21 +2,22 @@
 '''
 
 with adaptive learning rate
-
+super gaussian source prior
+partly succeed
 '''
 import numpy as np
 import soundfile as sf
 from scipy import signal
 import audio_toolbox as at
 fs = 8000
-eta0 = 10#learning rate
+eta0 = 2#learning rate
 beta = 0.5
-lamb = 0.999
+lamb = 0.995
 nsources = 2#还是人为设置一个参数吧，表示信号源的数
 fileway = 'E2A'
 file1 = 'mixed/'+fileway+'_L.wav'
 file2 = 'mixed/'+fileway+'_R.wav'
-
+'''
 tmp ,sr = sf.read(file1)
 
 for i in range(nsources):
@@ -27,6 +28,10 @@ Sig_ori[:,:] = tmp.T
 tmp ,_= sf.read(file2)
 Sig_ori[:,:] = tmp.T +Sig_ori[:,:]
 del tmp
+'''
+Sig_ori = at.load_resampled_audio(file1,fs)
+Sig_ori = Sig_ori + at.load_resampled_audio(file2,fs)
+Sig_ori = Sig_ori.T
 ##stft
 _,_,Zxx0 = signal.stft(Sig_ori[0,:] , nperseg=2048 , noverlap=1536)
 a,b = np.shape(Zxx0)
@@ -105,7 +110,7 @@ for i in range(nsources):
     _ , tmp = signal.istft(S_out[i,:,:].T, nperseg=2048 , noverlap=1536)
     St_hat[i,:] = np.real(tmp)
 
-sf.write('after/'+fileway+'_sp.wav', St_hat.T,samplerate= sr)
+sf.write('after/'+fileway+'_ds.wav', St_hat.T,samplerate= fs)
 
 
 
